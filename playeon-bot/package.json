@@ -1,0 +1,28 @@
+{
+  "name": "playeon",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file=.env src/index.ts",
+    "start": "tsx --env-file=.env src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@mtcute/core": "^0.32.1",
+    "@mtcute/dispatcher": "^0.32.1",
+    "@mtcute/markdown-parser": "^0.32.1",
+    "@mtcute/node": "^0.32.1",
+    "express": "^5.2.1",
+    "ioredis": "^5.4.1",
+    "long": "^5.2.3",
+    "mongodb": "^6.10.0",
+    "ws": "^8.21.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

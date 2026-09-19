@@ -1,0 +1,20 @@
+{
+  "name": "playeon",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Playeon - Synchronized real-time music and video lounge for Telegram",
+  "author": "Sushi <contact@xysushi.in>",
+  "license": "SEE LICENSE IN LICENSE",
+  "scripts": {
+    "install:all": "npm --prefix playeon-bot install && npm --prefix playeon-web install",
+    "build:web": "npm --prefix playeon-web run build",
+    "dev:bot": "npm --prefix playeon-bot run dev",
+    "dev:web": "npm --prefix playeon-web run dev",
+    "start:bot": "npm --prefix playeon-bot run start",
+    "start:web": "npm --prefix playeon-web run start",
+    "pm2:start": "pm2 start ecosystem.config.cjs",
+    "pm2:stop": "pm2 stop ecosystem.config.cjs",
+    "pm2:restart": "pm2 restart ecosystem.config.cjs",
+    "pm2:logs": "pm2 logs"
+  }
+}

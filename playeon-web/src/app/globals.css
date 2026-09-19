@@ -1,0 +1,923 @@
+@import "tailwindcss";
+
+/*
+  Playeon design tokens
+  ---------------------
+  Brand anchor is oklch(38.5% 0.111 271.2) = #2f3d7e, stored as `--brand-800`;
+  the rest of the ramp and every accent are the same hue at other lightness /
+  chroma steps. Surfaces stay near-neutral - same hue, chroma <= 0.006.
+
+  Elevation ladder (low -> high):
+    background -> topbar -> bottombar -> inset-card -> card -> popover
+    dark  : darkest   -> progressively lighter
+    light : off-white -> progressively whiter
+
+  `secondary` is the interactive fill that must stay visible *on top of* a
+  card, so it moves opposite the ladder in light mode (a shade darker than
+  white) and with the ladder in dark mode (a shade lighter than card).
+
+  Theme resolution order:
+    1. html[data-theme="dark" | "light"]  (explicit - set from Telegram's colorScheme)
+    2. prefers-color-scheme                (fallback before the app boots)
+*/
+
+@custom-variant dark {
+  @media (prefers-color-scheme: dark) {
+    &:where(html:not([data-theme="light"]), html:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+  &:where(html[data-theme="dark"], html[data-theme="dark"] *) {
+    @slot;
+  }
+}
+
+/* ---------------------------------------------------------------- light */
+
+:root {
+  /* brand ramp - the logo disc is 200/300, the navy mark is 800 */
+  --brand-50: oklch(97.2% 0.012 264.0);
+  --brand-100: oklch(94.0% 0.026 264.0);
+  --brand-200: oklch(86.8% 0.052 265.0);
+  --brand-300: oklch(79.5% 0.075 266.0);
+  --brand-400: oklch(68.0% 0.150 266.0);
+  --brand-500: oklch(57.0% 0.180 267.0);
+  --brand-600: oklch(50.0% 0.190 268.0);
+  --brand-700: oklch(44.0% 0.170 269.0);
+  --brand-800: oklch(38.5% 0.111 271.2);
+  --brand-900: oklch(30.0% 0.088 271.2);
+  --brand-950: oklch(21.0% 0.060 271.2);
+
+  /* elevation ladder: off-white -> whiter */
+  --background: oklch(96.5% 0 0);
+  --topbar: oklch(97.7% 0 0);
+  --bottombar: oklch(98.5% 0 0);
+  --inset-card: oklch(98.8% 0 0);
+  --card: oklch(100% 0 0);
+  --popover: oklch(100% 0 0);
+  --sheet: oklch(100% 0 0);
+
+  --foreground: oklch(18.8% 0.002 264.0);
+  --topbar-foreground: oklch(18.8% 0.002 264.0);
+  --bottombar-foreground: oklch(18.8% 0.002 264.0);
+  --inset-card-foreground: oklch(18.8% 0.002 264.0);
+  --card-foreground: oklch(18.8% 0.002 264.0);
+  --popover-foreground: oklch(18.8% 0.002 264.0);
+  --overlay: oklch(14.6% 0.002 264.0 / 0.45);
+
+  /* The video stage. Near-black in both themes and deliberately not overridden
+     per scheme: a light box behind a video fringes the picture and flashes
+     white between tracks, and letterbox bars only read as bars when they are
+     darker than the frame. */
+  --stage: oklch(11.5% 0.004 264.0);
+
+  /* actions. Deliberately *off* the logo hue. The new logo's striped backdrop
+     samples at oklch(~47% 0.176 273) - a vivid blue-violet, more saturated than
+     the old flat navy. On 273 the choices are vivid-and-violet (chroma 0.155+)
+     or blue-and-dull (0.115), with nothing usable between. Moving four degrees
+     down to 269 keeps just enough headroom that this reads blue rather than
+     purple, and the chroma is lifted to ~0.176 to match the backdrop's
+     saturation, while staying short of the sRGB ceiling (~0.21 at this
+     lightness) where it turns electric. The logo keeps its deep backdrop; this
+     is its brighter cousin, not a copy. */
+  --primary: oklch(48.0% 0.176 269.0);
+  --primary-hover: oklch(43.5% 0.167 269.0);
+  --primary-active: oklch(39.0% 0.154 269.0);
+  --primary-foreground: oklch(97.5% 0.008 269.0);
+  --primary-soft: oklch(94.0% 0.030 269.0);
+  --primary-soft-foreground: oklch(42.0% 0.158 269.0);
+
+  /* must read on a white card, so it steps *down* from white here */
+  --secondary: oklch(94.4% 0.002 264.0);
+  --secondary-hover: oklch(92.0% 0.002 264.0);
+  --secondary-active: oklch(89.0% 0.002 264.0);
+  --secondary-foreground: oklch(28.8% 0.005 264.0);
+
+  --accent: oklch(78.0% 0.108 269.0);
+  --accent-hover: oklch(74.0% 0.126 269.0);
+  --accent-foreground: oklch(22.0% 0.060 273.0);
+
+  --muted: oklch(95.6% 0 0);
+  --muted-foreground: oklch(52.7% 0.004 264.0);
+
+  /* lines: subtle (on flat bg) -> border (default) -> strong (dividers) */
+  --border-subtle: oklch(95.0% 0 0);
+  --border: oklch(91.7% 0.002 264.0);
+  --border-strong: oklch(85.6% 0.002 264.0);
+  --input: oklch(100% 0 0);
+  --input-border: oklch(89.0% 0.002 264.0);
+  --ring: oklch(48.0% 0.176 269.0);
+
+  /* semantics */
+  --success: oklch(49.3% 0.102 162.8);
+  --success-foreground: oklch(98.0% 0.011 167.8);
+  --success-soft: oklch(95.4% 0.023 165.9);
+  --success-soft-foreground: oklch(42.2% 0.087 162.5);
+
+  --warning: oklch(51.4% 0.111 70.3);
+  --warning-foreground: oklch(98.4% 0.015 80.7);
+  --warning-soft: oklch(95.8% 0.029 82.6);
+  --warning-soft-foreground: oklch(43.0% 0.092 72.3);
+
+  --destructive: oklch(54.1% 0.193 18.8);
+  --destructive-foreground: oklch(97.6% 0.012 11.0);
+  --destructive-soft: oklch(94.8% 0.022 7.2);
+  --destructive-soft-foreground: oklch(43.4% 0.163 19.3);
+
+  --info: oklch(51.9% 0.171 260.0);
+  --info-foreground: oklch(97.5% 0.011 264.5);
+  --info-soft: oklch(94.4% 0.024 262.1);
+  --info-soft-foreground: oklch(43.4% 0.144 260.2);
+
+  /* presence dots: not the button fills. A 6px mark has no area to carry a
+     mid-lightness colour, so these run higher chroma and are held just past
+     3:1 against the sheet they sit on. Hues are pushed apart (150 vs 65) so
+     the two stay separable for red/green deficiency at this size. */
+  --presence-online: oklch(64.0% 0.170 149.0);
+  --presence-idle: oklch(67.0% 0.160 65.0);
+
+  /* floating pills over the player: steps *away* from the page in both themes -
+     off-white against a light page, darker than a dark one */
+  --topbar-pill: oklch(89.5% 0 0);
+  --topbar-pill-foreground: oklch(18.8% 0.002 264);
+
+  
+  /* effects - light leans on shadow for elevation, dark leans on lightness */
+  --gradient-brand: linear-gradient(135deg, oklch(86.8% 0.052 265.0) 0%, oklch(79.5% 0.075 266.0) 100%);
+  --gradient-primary: linear-gradient(135deg, oklch(57.0% 0.180 267.0) 0%, oklch(44.0% 0.170 269.0) 100%);
+  /* the seek fill. Runs deep -> bright left to right, and drifts 13 degrees
+     toward cyan on the way, so the bar reads as charging toward the playhead
+     instead of sitting there as one flat block. The bright end lands under the
+     white knob, which is where the eye already is. */
+  --gradient-seek: linear-gradient(
+    90deg,
+    oklch(41.0% 0.140 266.0) 0%,
+    oklch(48.0% 0.155 262.0) 55%,
+    oklch(59.0% 0.165 253.0) 100%
+  );
+  /* the knob with the transport inert: the same pill, drained of the blue
+     tint and stepped away from the rail's lightness, so it still reads as a
+     solid object you simply can't move */
+  --gradient-seek-knob-off: linear-gradient(
+    to bottom,
+    oklch(82.0% 0.003 264.0) 0%,
+    oklch(72.0% 0.004 264.0) 100%
+  );
+  --shadow-color: 264 4% 10%;
+  --shadow-strength: 1;
+  --skeleton: oklch(93.5% 0 0);
+}
+
+/* ----------------------------------------------------------------- dark */
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) {
+    /* elevation ladder: darkest -> lighter */
+    --background: oklch(17.4% 0.002 264.0);
+    --topbar: oklch(19.3% 0.002 264.0);
+    --bottombar: oklch(20.2% 0.003 264.0);
+    --inset-card: oklch(20.6% 0.003 264.0);
+    --card: oklch(22.4% 0.003 264.0);
+    --popover: oklch(24.6% 0.004 264.0);
+    --sheet: oklch(22.4% 0.003 264.0);
+
+    --foreground: oklch(93.8% 0 0);
+    --topbar-foreground: oklch(93.8% 0 0);
+    --bottombar-foreground: oklch(93.8% 0 0);
+    --inset-card-foreground: oklch(93.8% 0 0);
+    --card-foreground: oklch(93.8% 0 0);
+    --popover-foreground: oklch(93.8% 0 0);
+    --overlay: oklch(12.3% 0.002 264.0 / 0.7);
+
+    --primary: oklch(51.0% 0.180 269.0);
+    --primary-hover: oklch(56.0% 0.185 269.0);
+    --primary-active: oklch(61.0% 0.180 269.0);
+    --primary-foreground: oklch(97.5% 0.008 269.0);
+    --primary-soft: oklch(27.0% 0.072 269.0);
+    --primary-soft-foreground: oklch(82.0% 0.096 269.0);
+
+    /* one step above card so a secondary button reads on top of it */
+    --secondary: oklch(26.7% 0.004 264.0);
+    --secondary-hover: oklch(29.6% 0.004 264.0);
+    --secondary-active: oklch(32.8% 0.005 264.0);
+    --secondary-foreground: oklch(91.4% 0.002 264.0);
+
+    --accent: oklch(71.0% 0.136 269.0);
+    --accent-hover: oklch(76.0% 0.116 269.0);
+    --accent-foreground: oklch(22.0% 0.060 273.0);
+
+    --muted: oklch(23.7% 0.003 264.0);
+    --muted-foreground: oklch(68.8% 0.004 264.0);
+
+    --border-subtle: oklch(22.8% 0.002 264.0);
+    --border: oklch(27.1% 0.004 264.0);
+    --border-strong: oklch(32.7% 0.004 264.0);
+    --input: oklch(20.6% 0.003 264.0);
+    --input-border: oklch(30.8% 0.004 264.0);
+    --ring: oklch(62.0% 0.170 269.0);
+
+    --success: oklch(56.1% 0.122 160.4);
+    --success-foreground: oklch(98.0% 0.011 167.8);
+    --success-soft: oklch(22.6% 0.028 162.7);
+    --success-soft-foreground: oklch(80.2% 0.134 162.3);
+
+    --warning: oklch(51.1% 0.107 71.1);
+    --warning-foreground: oklch(98.4% 0.015 80.7);
+    --warning-soft: oklch(23.2% 0.026 79.1);
+    --warning-soft-foreground: oklch(81.8% 0.127 78.5);
+
+    --destructive: oklch(56.7% 0.179 14.2);
+    --destructive-foreground: oklch(97.6% 0.012 11.0);
+    --destructive-soft: oklch(22.3% 0.036 2.0);
+    --destructive-soft-foreground: oklch(76.1% 0.126 9.3);
+
+    --info: oklch(53.1% 0.173 260.6);
+    --info-foreground: oklch(97.5% 0.011 264.5);
+    --info-soft: oklch(22.4% 0.040 264.2);
+    --info-soft-foreground: oklch(77.3% 0.104 260.7);
+
+    /* lifted and slightly de-chromatised: on the dark sheet a dot this small
+       blooms, and full chroma turns the green into a glowing pinprick */
+    --presence-online: oklch(76.0% 0.175 152.0);
+    --presence-idle: oklch(79.0% 0.150 72.0);
+
+    --topbar-pill: oklch(13.5% 0.004 264);
+    --topbar-pill-foreground: oklch(93.8% 0 0);
+
+    --gradient-brand: linear-gradient(135deg, oklch(50.0% 0.140 269.0) 0%, oklch(38.5% 0.111 271.2) 100%);
+    --gradient-primary: linear-gradient(135deg, oklch(57.0% 0.180 267.0) 0%, oklch(44.0% 0.170 269.0) 100%);
+    --gradient-seek: linear-gradient(
+      90deg,
+      oklch(43.0% 0.145 266.0) 0%,
+      oklch(50.0% 0.160 262.0) 55%,
+      oklch(63.0% 0.170 253.0) 100%
+    );
+    --gradient-seek-knob-off: linear-gradient(
+      to bottom,
+      oklch(56.0% 0.004 264.0) 0%,
+      oklch(47.0% 0.004 264.0) 100%
+    );
+    --shadow-color: 264 6% 2%;
+    --shadow-strength: 1.6;
+    --skeleton: oklch(24.9% 0.003 264.0);
+  }
+}
+
+html[data-theme="dark"] {
+  /* elevation ladder: darkest -> lighter */
+  --background: oklch(17.4% 0.002 264.0);
+  --topbar: oklch(19.3% 0.002 264.0);
+  --bottombar: oklch(20.2% 0.003 264.0);
+  --inset-card: oklch(20.6% 0.003 264.0);
+  --card: oklch(22.4% 0.003 264.0);
+  --popover: oklch(24.6% 0.004 264.0);
+  --sheet: oklch(22.4% 0.003 264.0);
+
+  --foreground: oklch(93.8% 0 0);
+  --topbar-foreground: oklch(93.8% 0 0);
+  --bottombar-foreground: oklch(93.8% 0 0);
+  --inset-card-foreground: oklch(93.8% 0 0);
+  --card-foreground: oklch(93.8% 0 0);
+  --popover-foreground: oklch(93.8% 0 0);
+  --overlay: oklch(12.3% 0.002 264.0 / 0.7);
+
+  --primary: oklch(51.0% 0.180 269.0);
+  --primary-hover: oklch(56.0% 0.185 269.0);
+  --primary-active: oklch(61.0% 0.180 269.0);
+  --primary-foreground: oklch(97.5% 0.008 269.0);
+  --primary-soft: oklch(27.0% 0.072 269.0);
+  --primary-soft-foreground: oklch(82.0% 0.096 269.0);
+
+  /* one step above card so a secondary button reads on top of it */
+  --secondary: oklch(26.7% 0.004 264.0);
+  --secondary-hover: oklch(29.6% 0.004 264.0);
+  --secondary-active: oklch(32.8% 0.005 264.0);
+  --secondary-foreground: oklch(91.4% 0.002 264.0);
+
+  --accent: oklch(71.0% 0.136 269.0);
+  --accent-hover: oklch(76.0% 0.116 269.0);
+  --accent-foreground: oklch(22.0% 0.060 273.0);
+
+  --muted: oklch(23.7% 0.003 264.0);
+  --muted-foreground: oklch(68.8% 0.004 264.0);
+
+  --border-subtle: oklch(22.8% 0.002 264.0);
+  --border: oklch(27.1% 0.004 264.0);
+  --border-strong: oklch(32.7% 0.004 264.0);
+  --input: oklch(20.6% 0.003 264.0);
+  --input-border: oklch(30.8% 0.004 264.0);
+  --ring: oklch(62.0% 0.170 269.0);
+
+  --success: oklch(56.1% 0.122 160.4);
+  --success-foreground: oklch(98.0% 0.011 167.8);
+  --success-soft: oklch(22.6% 0.028 162.7);
+  --success-soft-foreground: oklch(80.2% 0.134 162.3);
+
+  --warning: oklch(51.1% 0.107 71.1);
+  --warning-foreground: oklch(98.4% 0.015 80.7);
+  --warning-soft: oklch(23.2% 0.026 79.1);
+  --warning-soft-foreground: oklch(81.8% 0.127 78.5);
+
+  --destructive: oklch(56.7% 0.179 14.2);
+  --destructive-foreground: oklch(97.6% 0.012 11.0);
+  --destructive-soft: oklch(22.3% 0.036 2.0);
+  --destructive-soft-foreground: oklch(76.1% 0.126 9.3);
+
+  --info: oklch(53.1% 0.173 260.6);
+  --info-foreground: oklch(97.5% 0.011 264.5);
+  --info-soft: oklch(22.4% 0.040 264.2);
+  --info-soft-foreground: oklch(77.3% 0.104 260.7);
+
+  /* lifted and slightly de-chromatised: on the dark sheet a dot this small
+     blooms, and full chroma turns the green into a glowing pinprick */
+  --presence-online: oklch(76.0% 0.175 152.0);
+  --presence-idle: oklch(79.0% 0.150 72.0);
+
+  --topbar-pill: oklch(13.5% 0.004 264);
+  --topbar-pill-foreground: oklch(93.8% 0 0);
+
+  --gradient-brand: linear-gradient(135deg, oklch(50.0% 0.140 269.0) 0%, oklch(38.5% 0.111 271.2) 100%);
+  --gradient-primary: linear-gradient(135deg, oklch(57.0% 0.180 267.0) 0%, oklch(44.0% 0.170 269.0) 100%);
+  --gradient-seek: linear-gradient(
+    90deg,
+    oklch(43.0% 0.145 266.0) 0%,
+    oklch(50.0% 0.160 262.0) 55%,
+    oklch(63.0% 0.170 253.0) 100%
+  );
+  --gradient-seek-knob-off: linear-gradient(
+    to bottom,
+    oklch(56.0% 0.004 264.0) 0%,
+    oklch(47.0% 0.004 264.0) 100%
+  );
+  --shadow-color: 264 6% 2%;
+  --shadow-strength: 1.6;
+  --skeleton: oklch(24.9% 0.003 264.0);
+}
+
+/* --------------------------------------------------------- theme bridge */
+
+@theme inline {
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
+  --color-brand-950: var(--brand-950);
+
+  /* elevation ladder */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-topbar: var(--topbar);
+  --color-topbar-foreground: var(--topbar-foreground);
+  --color-bottombar: var(--bottombar);
+  --color-bottombar-foreground: var(--bottombar-foreground);
+  --color-inset-card: var(--inset-card);
+  --color-inset-card-foreground: var(--inset-card-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-sheet: var(--sheet);
+  --color-overlay: var(--overlay);
+  --color-stage: var(--stage);
+
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-active: var(--primary-active);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-soft-foreground: var(--primary-soft-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-hover: var(--secondary-hover);
+  --color-secondary-active: var(--secondary-active);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-border-subtle: var(--border-subtle);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-input-border: var(--input-border);
+  --color-ring: var(--ring);
+
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-soft: var(--success-soft);
+  --color-success-soft-foreground: var(--success-soft-foreground);
+
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-soft-foreground: var(--warning-soft-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-destructive-soft-foreground: var(--destructive-soft-foreground);
+
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-soft: var(--info-soft);
+  --color-info-soft-foreground: var(--info-soft-foreground);
+
+  --color-presence-online: var(--presence-online);
+  --color-presence-idle: var(--presence-idle);
+
+  --color-skeleton: var(--skeleton);
+  --color-topbar-pill: var(--topbar-pill);
+  --color-topbar-pill-foreground: var(--topbar-pill-foreground);
+
+  --font-sans: var(--font-onest);
+  --font-mono: var(--font-geist-mono);
+  /* Rubik - avatar initials and other display numerals. Deliberately not named
+     --font-rubik: that would collide with next/font's own variable. */
+  --font-display: var(--font-rubik);
+
+  --radius-card: 1rem;
+  --radius-sheet: 1.5rem;
+
+  /* shadows scale with --shadow-strength so dark mode reads deeper */
+  --shadow-card: 0 1px 2px
+      hsl(var(--shadow-color) / calc(0.05 * var(--shadow-strength))),
+    0 8px 24px -14px
+      hsl(var(--shadow-color) / calc(0.16 * var(--shadow-strength)));
+  --shadow-topbar: 0 1px 0
+    hsl(var(--shadow-color) / calc(0.06 * var(--shadow-strength)));
+  --shadow-bottombar: 0 -1px 0
+      hsl(var(--shadow-color) / calc(0.06 * var(--shadow-strength))),
+    0 -12px 32px -20px
+      hsl(var(--shadow-color) / calc(0.3 * var(--shadow-strength)));
+  --shadow-popover: 0 12px 40px -12px
+    hsl(var(--shadow-color) / calc(0.28 * var(--shadow-strength)));
+  --shadow-sheet: 0 -8px 40px -12px
+    hsl(var(--shadow-color) / calc(0.35 * var(--shadow-strength)));
+  --inset-shadow-well: inset 0 1px 2px
+    hsl(var(--shadow-color) / calc(0.05 * var(--shadow-strength)));
+}
+
+/* ---------------------------------------------------------------- base */
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  :root {
+    /* Telegram fills these in on newer clients; env() covers the browser. */
+    --safe-top: var(--tg-safe-area-inset-top, env(safe-area-inset-top, 0px));
+    --safe-bottom: var(
+      --tg-safe-area-inset-bottom,
+      env(safe-area-inset-bottom, 0px)
+    );
+    --safe-left: var(--tg-safe-area-inset-left, env(safe-area-inset-left, 0px));
+    --safe-right: var(
+      --tg-safe-area-inset-right,
+      env(safe-area-inset-right, 0px)
+    );
+    /* content inset = device safe area + Telegram's own header/button chrome */
+    --content-top: calc(
+      var(--safe-top) + var(--tg-content-safe-area-inset-top, 0px)
+    );
+    /*
+      How far the lounge's own chrome sits from the edges of the screen.
+
+      One number for the room pill at the top and the key hints at the bottom,
+      so they are inset by the same amount and read as a pair. Only used where
+      there is no Telegram safe area to sit under, which in practice means the
+      desktop: on a phone the pill tucks into the notch area instead.
+    */
+    --hud-inset: 1.25rem;
+    --app-height: var(--tg-viewport-stable-height, 100dvh);
+
+    color-scheme: light dark;
+  }
+
+  html {
+    height: 100%;
+    background-color: var(--background);
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    min-height: 100%;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    /* full-screen mini app: never rubber-band or scroll-chain to Telegram */
+    overscroll-behavior: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: var(--accent);
+    color: var(--accent-foreground);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  input,
+  textarea,
+  select {
+    background-color: var(--input);
+    color: var(--foreground);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--muted-foreground);
+  }
+}
+
+/* ----------------------------------------------------------- utilities */
+
+@utility app-height {
+  height: var(--app-height);
+}
+
+@utility pt-safe {
+  padding-top: var(--content-top);
+}
+
+@utility pb-safe {
+  padding-bottom: var(--safe-bottom);
+}
+
+/*
+  A sheet's own bottom padding, which cannot be zero.
+
+  `pb-safe` alone is the home-indicator inset, and on a desktop or an Android
+  phone without one that resolves to 0 - leaving whatever is at the bottom of a
+  sheet, which is usually a text field, sitting flush on the edge of the panel.
+  The floor is what the sheet would have wanted anyway; the safe area only takes
+  over once it is the larger of the two.
+*/
+@utility pb-sheet {
+  padding-bottom: max(var(--safe-bottom), 0.875rem);
+}
+
+@utility px-safe {
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+}
+
+@utility mt-safe {
+  margin-top: var(--content-top); 
+}
+
+@utility mb-safe {
+  margin-bottom: var(--safe-bottom);
+}
+
+@utility bg-gradient-brand {
+  background-image: var(--gradient-brand);
+}
+
+@utility bg-gradient-primary {
+  background-image: var(--gradient-primary);
+}
+
+@utility bg-gradient-seek {
+  background-image: var(--gradient-seek);
+}
+
+/* overflowing text that drifts to its end, pauses, and returns */
+/* One copy's width plus its gap - at which point the second copy sits exactly
+   where the first began, so restarting is invisible and the text reads as one
+   endless ribbon. Returning to 0 instead is what made it scroll back. */
+@keyframes marquee-x {
+  from {
+    translate: 0 0;
+  }
+  to {
+    translate: var(--marquee-distance) 0;
+  }
+}
+
+@utility marquee {
+  animation: marquee-x var(--marquee-duration, 8s) linear infinite;
+  will-change: translate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee {
+    animation: none;
+  }
+}
+
+/* activity accents - the one place colour is allowed outside the brand */
+@utility bg-gradient-video {
+  background-image:
+    repeating-linear-gradient(
+      125deg,
+      oklch(100% 0 0 / 0.11) 0px,
+      oklch(100% 0 0 / 0.11) 1.5px,
+      transparent 1.5px,
+      transparent 9px
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      oklch(58% 0.165 255) 0%,
+      oklch(42% 0.160 266) 100%
+    );
+}
+
+@utility bg-gradient-music {
+  background-image:
+    repeating-linear-gradient(
+      125deg,
+      oklch(100% 0 0 / 0.11) 0px,
+      oklch(100% 0 0 / 0.11) 1.5px,
+      transparent 1.5px,
+      transparent 9px
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      oklch(58% 0.175 22) 0%,
+      oklch(43% 0.170 12) 100%
+    );
+}
+
+@utility bg-gradient-game {
+  background-image:
+    repeating-linear-gradient(
+      125deg,
+      oklch(100% 0 0 / 0.11) 0px,
+      oklch(100% 0 0 / 0.11) 1.5px,
+      transparent 1.5px,
+      transparent 9px
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      oklch(58% 0.135 155) 0%,
+      oklch(43% 0.120 163) 100%
+    );
+}
+
+/* stand-in room banner - brand ramp, lit from the left. The stripe layer is
+   viewport-anchored (attachment: fixed) so any other surface using the same
+   stripes lines up with it seamlessly. */
+@utility bg-gradient-banner {
+  background-image: linear-gradient(
+    90deg,
+    oklch(38% 0.125 271.2) 0%,
+    oklch(48% 0.175 269) 100%
+  );
+}
+
+/* initial-based avatar - the banner's exact two stops, run radially so the
+   shape differs while the colour family matches */
+@utility bg-gradient-avatar {
+  background-image: radial-gradient(
+    circle at 50% 50%,
+    oklch(48% 0.175 269) 0%,
+    oklch(38% 0.125 271.2) 100%
+  );
+}
+
+/* per-person avatar tint - hue comes from --avatar-hue, lightness and chroma
+   are fixed so the initial keeps its contrast at every hue */
+@utility bg-avatar-tint {
+  background-image: radial-gradient(
+    circle at 50% 50%,
+    oklch(56% 0.145 var(--avatar-hue, 268)) 0%,
+    oklch(42% 0.115 var(--avatar-hue, 268)) 100%
+  );
+}
+
+/* Status lane: the outgoing line rolls up and out the top, the incoming rises
+   from the bottom into its place. Both elements are the full height of the
+   pill, so 100% is one whole pill-height of travel and each line is clear of
+   the box at its own end of the roll.
+
+   The fades are pushed to the ends rather than spread across the travel: each
+   line is solid for the middle of its roll, so what you see is text moving
+   through the pill rather than text dissolving on the spot. They cross at
+   opposite halves of the box, so both being opaque there is legible.
+
+   The blur is motion, not atmosphere: 1.5px at the far end of the travel and
+   clean by the time the line is anywhere near readable. Deliberately under
+   the point where it registers as an effect - at this size anything past
+   ~2px stops reading as speed and starts reading as out-of-focus text.
+
+   It is also the only per-frame cost in here that is not free. `translate`
+   and `opacity` are compositor properties - the GPU moves an already-drawn
+   layer - but a changing blur radius re-runs a gaussian pass over the glyphs
+   every frame, on two lines at once. So the radius is held constant for most
+   of the animation and only interpolates over the third of it where the line
+   is actually travelling fast: identical to the eye, roughly a third of the
+   raster work. `visibility: hidden` at the end of the roll-out retires the
+   layer rather than leaving a finished, filtered, permanently-promoted
+   element parked above the pill until the next swap. */
+@keyframes lane-in {
+  from {
+    translate: 0 100%;
+    opacity: 0;
+    filter: blur(1.5px);
+  }
+  30% {
+    opacity: 1;
+  }
+  35% {
+    filter: blur(0);
+  }
+  to {
+    translate: 0 0;
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes lane-out {
+  from {
+    translate: 0 0;
+    opacity: 1;
+    filter: blur(0);
+    visibility: visible;
+  }
+  65% {
+    filter: blur(0);
+  }
+  70% {
+    opacity: 1;
+  }
+  to {
+    translate: 0 -100%;
+    opacity: 0;
+    filter: blur(1.5px);
+    visibility: hidden;
+  }
+}
+
+/* Same duration *and* same curve as the pill's width transition in
+   participants-lane.tsx. They ran on 0.16/1/0.3/1 against the pill's
+   0.32/0.72/0/1: equal durations, but the sharper curve put the line in place
+   while the pill was still opening around it, so one gesture read as two. */
+/* `will-change` because the pill clips on a border radius, and a rounded clip
+   is enough to keep the browser from compositing what moves inside it - the
+   roll was repainting the whole pill every frame. Naming the properties ahead
+   of time gets the line its own layer. `filter` is on the list for the same
+   reason the other two are: left off, the blur would be re-rasterised against
+   the pill each frame, which is the one way a 1.5px blur here could cost
+   anything. */
+@utility animate-lane-in {
+  animation: lane-in 320ms cubic-bezier(0.32, 0.72, 0, 1);
+  will-change: translate, opacity, filter;
+}
+
+@utility animate-lane-out {
+  animation: lane-out 320ms cubic-bezier(0.32, 0.72, 0, 1) forwards;
+  will-change: translate, opacity, filter;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-lane-in {
+    animation: none;
+  }
+  /* Not merely unanimated: the outgoing line is parked off the top by the
+     animation it no longer has, so without this it sits over the line that
+     replaced it. Nothing is moving to watch here anyway. */
+  .animate-lane-out {
+    animation: none;
+    display: none;
+  }
+}
+
+/* transparent track + branded thumb, so it can ride on top of a custom rail */
+@utility seek-slider {
+  appearance: none;
+  background: transparent;
+
+  &::-webkit-slider-runnable-track {
+    height: 0.375rem;
+    background: transparent;
+  }
+  /* iOS-style knob: a horizontal pill rather than a round dot, tinted toward
+     the brand instead of sitting there as a plain white swatch */
+  &::-webkit-slider-thumb {
+    appearance: none;
+    height: 0.8125rem;
+    width: 1.125rem;
+    margin-top: -0.21875rem;
+    border-radius: 9999px;
+    background: linear-gradient(
+      to bottom,
+      oklch(97.5% 0.018 258) 0%,
+      oklch(89.0% 0.048 256) 100%
+    );
+    box-shadow: 0 1px 3px oklch(0% 0 0 / 0.28);
+    transition:
+      height 180ms cubic-bezier(0.16, 1, 0.3, 1),
+      width 180ms cubic-bezier(0.16, 1, 0.3, 1),
+      margin-top 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  /* grabbing it swells the knob, the way iOS scrubbers do */
+  &:active::-webkit-slider-thumb {
+    height: 1.0625rem;
+    width: 1.375rem;
+    margin-top: -0.34375rem;
+  }
+  /* inert: recoloured rather than faded - a see-through knob reads as a
+     rendering fault, a grey one reads as a control that isn't taking input.
+     The shadow lightens with it so it doesn't sit proud of a dead rail. */
+  &:disabled::-webkit-slider-thumb {
+    background: var(--gradient-seek-knob-off);
+    box-shadow: 0 1px 2px oklch(0% 0 0 / 0.18);
+  }
+  /* ...and it must not swell to a touch it isn't accepting */
+  &:disabled:active::-webkit-slider-thumb {
+    height: 0.8125rem;
+    width: 1.125rem;
+    margin-top: -0.21875rem;
+  }
+
+  &::-moz-range-track {
+    height: 0.375rem;
+    background: transparent;
+  }
+  &::-moz-range-thumb {
+    height: 0.8125rem;
+    width: 1.125rem;
+    border: none;
+    border-radius: 9999px;
+    background: linear-gradient(
+      to bottom,
+      oklch(97.5% 0.018 258) 0%,
+      oklch(89.0% 0.048 256) 100%
+    );
+    box-shadow: 0 1px 3px oklch(0% 0 0 / 0.28);
+    transition:
+      height 180ms cubic-bezier(0.16, 1, 0.3, 1),
+      width 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  &:active::-moz-range-thumb {
+    height: 1.0625rem;
+    width: 1.375rem;
+  }
+  &:disabled::-moz-range-thumb {
+    background: var(--gradient-seek-knob-off);
+    box-shadow: 0 1px 2px oklch(0% 0 0 / 0.18);
+  }
+  &:disabled:active::-moz-range-thumb {
+    height: 0.8125rem;
+    width: 1.125rem;
+  }
+}
+
+/* bottom sheet: panel rises, scrim fades */
+@keyframes sheet-up {
+  from {
+    translate: 0 100%;
+  }
+  to {
+    translate: 0 0;
+  }
+}
+
+@keyframes scrim-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@utility animate-sheet-up {
+  animation: sheet-up 340ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@utility animate-scrim-in {
+  animation: scrim-in 220ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-sheet-up,
+  .animate-scrim-in {
+    animation: none;
+  }
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+ 
