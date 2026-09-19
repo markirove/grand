@@ -1,155 +1,318 @@
 # Playeon
 
-Playeon is a real-time synchronized music and video streaming lounge for Telegram groups and communities. It combines a high-performance Telegram MTProto bot with a low-latency Web Mini App featuring both an interactive 3D lounge and a clean 2D playback interface.
+Playeon is a self-hosted, real-time synchronized music and video playback platform engineered for Telegram groups, communities, and decentralized voice lounges. The platform connects a Telegram MTProto client daemon with an interactive Next.js Web Mini App, providing sub-second audio sync, synchronized lyrics, listening leaderboards, and an interactive Three.js 3D lounge.
 
 ---
 
-## Overview
+## Key Features
 
-The repository is organized into modular services:
+### Telegram Bot (`playeon-bot`)
+- **Native MTProto Integration**: Built on `@mtcute` for reliable Telegram protocol communication and high throughput.
+- **Queue and Playback Control**: Multi-track queuing with priority handling, loop modes, shuffle, seek, pause, and skip voting.
+- **Streaming Pipeline**: Dynamic audio stream extraction using `yt-dlp` and `ffmpeg` with adaptive bitrate transcoding.
+- **Embedded Room Server**: Integrated HTTP and WebSocket server handling real-time peer synchronization without requiring an external signaling broker.
+- **Community Analytics**: Persistent tracking of member listening time, top tracks, and group leaderboards backed by MongoDB and Redis.
 
-- **`playeon-bot`**: Core Telegram bot powered by `@mtcute`. Manages group playback queues, media fetching via `yt-dlp`, live state synchronization, and hosts the integrated WebSocket/HTTP room server.
-- **`playeon-web`**: Next.js (App Router) web application and Telegram Mini App. Offers real-time synchronized listening, synchronized lyrics, responsive playback controls, and an interactive Three.js 3D lounge environment.
-- **`deploy/`**: Production Nginx configuration templates, PM2 process manager declarations, and Docker Compose definitions for databases.
+### Web Mini App (`playeon-web`)
+- **Dual Interface Modes**:
+  - **3D Lounge**: An interactive visual environment powered by Three.js and React Three Fiber featuring dynamic audio-reactive elements and user avatars.
+  - **2D Stream Player**: A lightweight, mobile-first interface optimized for Telegram Web Mini App embedded viewports.
+- **Sub-Second Synchronization**: Clock-drift compensated audio playback synchronizing all connected listeners to within 50 milliseconds of the host timeline.
+- **Synchronized Lyrics**: Real-time line-by-line lyric highlighting synced to track playback timestamps.
+- **Interactive Reactions**: Ephemeral live floating reactions, chat messages, and gesture animations broadcast over WebSockets.
 
 ---
 
-## Architecture
+## System Architecture
 
 ```
-                    ┌────────────────────────┐
-                    │    Telegram Clients    │
-                    └───────────┬────────────┘
-                                │
-                 ┌──────────────┴──────────────┐
-                 │        Nginx Gateway        │
-                 └──────┬──────────────┬───────┘
-                        │              │
-         HTTP (port 3006)│              │ WS / HTTP (port 3067)
-                        ▼              ▼
-              ┌────────────────┐ ┌────────────────┐
-              │  playeon-web   │ │  playeon-bot   │
-              │  (Next.js App) │ │ (mtcute + WS)  │
-              └───────┬────────┘ └────────┬───────┘
-                      │                   │
-                      └─────────┬─────────┘
-                                │
-                   ┌────────────┴────────────┐
-                   ▼                         ▼
-            ┌─────────────┐           ┌─────────────┐
-            │ MongoDB 8.0 │           │   Redis 7   │
-            └─────────────┘           └─────────────┘
+                    +------------------------------------+
+                    |        Telegram Client Apps        |
+                    +-----------------+------------------+
+                                      |
+                                      | HTTPS / WSS
+                                      v
+                    +------------------------------------+
+                    |        Nginx Reverse Proxy         |
+                    +--------+------------------+--------+
+                             |                  |
+           HTTP / Static     |                  | WebSocket / API
+           Port 3006         |                  | Port 3067
+                             v                  v
+                    +----------------+  +----------------+
+                    |  playeon-web   |  |  playeon-bot   |
+                    | Next.js App    |  | mtcute + WS    |
+                    +--------+-------+  +-------+--------+
+                             |                  |
+                             +--------+---------+
+                                      |
+                     +----------------+----------------+
+                     |                                 |
+                     v                                 v
+          +--------------------+             +-------------------+
+          |    MongoDB 8.0     |             |      Redis 7      |
+          |  Persistent State  |             |  Pub/Sub & Cache  |
+          +--------------------+             +-------------------+
+```
+
+---
+
+## Directory Structure
+
+```
+playeon/
+├── playeon-bot/               # Telegram bot and WebSocket room server
+│   ├── src/
+│   │   ├── commands/          # Telegram bot command handlers
+│   │   ├── core/              # Audio playback pipeline and yt-dlp handlers
+│   │   ├── database/          # Mongoose models and Redis clients
+│   │   ├── server/            # WebSocket room protocol and HTTP endpoints
+│   │   └── index.ts           # Service initialization entry point
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── .env.example
+├── playeon-web/               # Next.js Web Mini App
+│   ├── src/
+│   │   ├── app/               # App Router pages and layouts
+│   │   ├── components/        # React UI and Three.js canvas components
+│   │   ├── hooks/             # WebSocket sync, audio player, and theme hooks
+│   │   ├── lib/               # Utility functions and Telegram WebApp bridge
+│   │   └── types/             # Shared TypeScript definitions
+│   ├── package.json
+│   ├── next.config.mjs
+│   └── .env.example
+├── deploy/                    # Infrastructure declarations
+│   ├── nginx/                 # Production Nginx site configurations
+│   └── docker-compose.yml     # Container definitions for MongoDB and Redis
+├── ecosystem.config.cjs       # PM2 process manager configuration
+├── deploy.sh                  # Automated deployment script
+├── LICENSE                    # Attribution and Personal Use License (v1.0)
+└── package.json               # Root workspace scripts
 ```
 
 ---
 
 ## Prerequisites
 
-- **Node.js**: v20.x or v22.x LTS
-- **MongoDB**: v7.0 or v8.0
-- **Redis**: v7.x
-- **yt-dlp**: Latest release (`pipx install yt-dlp` or binary)
-- **ffmpeg**: Installed and available in `$PATH`
-- **Telegram API Credentials**: `API_ID`, `API_HASH` from [my.telegram.org](https://my.telegram.org), and a Bot Token from [@BotFather](https://t.me/BotFather).
+Ensure the following runtimes and utilities are installed on the host system:
+
+- **Node.js**: Version 20.x LTS or 22.x LTS
+- **MongoDB**: Version 7.0 or higher (8.0 recommended)
+- **Redis**: Version 7.0 or higher
+- **yt-dlp**: Up-to-date release installed in system `$PATH`
+- **ffmpeg**: Installed with `libmp3lame` and `libopus` support
+- **Telegram API Credentials**:
+  - `API_ID` and `API_HASH` obtained from [my.telegram.org](https://my.telegram.org)
+  - `BOT_TOKEN` obtained from [@BotFather](https://t.me/BotFather)
 
 ---
 
-## Quick Start (Development)
+## Configuration Reference
 
-### 1. Clone and Install Dependencies
+### Bot Service (`playeon-bot/.env`)
+
+| Variable | Type | Description | Default |
+| :--- | :--- | :--- | :--- |
+| `API_ID` | Integer | Telegram API identification number | Required |
+| `API_HASH` | String | Telegram API hash string | Required |
+| `BOT_TOKEN` | String | Bot authentication token from BotFather | Required |
+| `BOT_USERNAME` | String | Telegram bot handle (without @) | Required |
+| `MONGO_URI` | String | MongoDB connection URI | `mongodb://localhost:27017/playeon` |
+| `REDIS_URL` | String | Redis server connection URI | `redis://localhost:6379` |
+| `ROOM_WS_PORT` | Integer | TCP port for embedded WebSocket server | `3067` |
+| `WEB_APP_URL` | String | Public HTTPS URL where `playeon-web` is hosted | `https://playeon.domain.com` |
+| `DOWNLOAD_DIR` | String | Directory path for cached media files | `/tmp/playeon-cache` |
+| `MAX_QUEUE_SIZE` | Integer | Maximum tracks allowed per room queue | `50` |
+
+### Web Service (`playeon-web/.env`)
+
+| Variable | Type | Description | Default |
+| :--- | :--- | :--- | :--- |
+| `NEXT_PUBLIC_WS_URL` | String | Public WebSocket URL pointing to `playeon-bot` | `wss://playeon.domain.com/ws` |
+| `NEXT_PUBLIC_API_URL` | String | Public HTTP API URL of the bot daemon | `https://playeon.domain.com/api` |
+| `NEXT_PUBLIC_BOT_USERNAME`| String | Telegram username of the companion bot | Required |
+
+---
+
+## Installation and Local Setup
+
+### 1. Repository Setup
 
 ```bash
 git clone https://github.com/playeon/playeon.git
 cd playeon
 
-# Install all subproject dependencies
+# Install all workspace dependencies
 npm run install:all
 ```
 
-### 2. Start Supporting Databases
+### 2. Launch Databases
 
-If Docker is available, spin up local instances of MongoDB and Redis:
+Start local MongoDB and Redis instances using Docker Compose:
 
 ```bash
-docker compose up -d
+docker compose -f deploy/docker-compose.yml up -d
 ```
 
-### 3. Configure Environment Variables
+### 3. Environment Setup
 
-Copy the example configuration files and supply your credentials:
+Generate local environment files from templates:
 
 ```bash
 cp playeon-bot/.env.example playeon-bot/.env
 cp playeon-web/.env.example playeon-web/.env
 ```
 
-Key variables in `playeon-bot/.env`:
-- `API_ID` and `API_HASH`: Telegram application credentials
-- `BOT_TOKEN`: Bot authentication token
-- `MONGO_URI`: `mongodb://localhost:27017`
-- `REDIS_URL`: `redis://localhost:6379`
-- `ROOM_WS_PORT`: Port for the WebSocket server (default: `3067`)
+Populate the required credentials in both files.
 
-### 4. Run Development Servers
+### 4. Run Development Instances
 
-Run services in separate terminal windows:
+Start the services concurrently or in separate shells:
 
 ```bash
-# Terminal 1: Run the bot
+# Terminal 1: Run Telegram Bot & Room Server
 npm run dev:bot
 
-# Terminal 2: Run the web application
+# Terminal 2: Run Next.js Mini App
 npm run dev:web
 ```
 
 ---
 
+## Bot Command Reference
+
+The following commands are registered in group chats where the bot is added:
+
+| Command | Arguments | Scope | Description |
+| :--- | :--- | :--- | :--- |
+| `/play` | `<query \| url>` | Group / Lounge | Searches or extracts audio and appends it to the active playback queue. |
+| `/queue` | None | Group / Lounge | Displays current playback queue, remaining track durations, and upcoming items. |
+| `/skip` | None | Group / Lounge | Initiates a vote to skip or immediately skips current track (if administrator). |
+| `/pause` | None | Administrators | Pauses active room playback and freezes audio sync timeline. |
+| `/resume` | None | Administrators | Resumes audio playback from the frozen timestamp. |
+| `/stop` | None | Administrators | Halts playback, clears the active queue, and resets room session state. |
+| `/lyrics` | None | Group / Lounge | Fetches and presents synchronized lyrics for the active track. |
+| `/leaderboard` | None | Group | Displays group listening metrics, top active listeners, and total hours streamed. |
+| `/lounge` | None | Group / Lounge | Sends the direct button to launch the Web Mini App for the current chat room. |
+
+---
+
+## Real-Time Synchronization Protocol
+
+The bot and connected web clients communicate over a lightweight binary/JSON WebSocket protocol on port `3067`.
+
+### Core Client Messages
+
+```json
+{
+  "type": "join",
+  "roomId": "-1001234567890",
+  "userId": 987654321,
+  "initData": "user_telegram_init_data_string"
+}
+```
+
+```json
+{
+  "type": "seek",
+  "positionSeconds": 142.5
+}
+```
+
+```json
+{
+  "type": "reaction",
+  "reactionId": "fire"
+}
+```
+
+### Server Broadcast Events
+
+```json
+{
+  "event": "room_state",
+  "data": {
+    "roomId": "-1001234567890",
+    "track": {
+      "id": "dQw4w9WgXcQ",
+      "title": "Track Title",
+      "artist": "Artist Name",
+      "duration": 213,
+      "audioUrl": "/stream/dQw4w9WgXcQ.mp3"
+    },
+    "playback": {
+      "status": "playing",
+      "position": 45.2,
+      "serverTime": 1789855389000
+    },
+    "listenersCount": 14
+  }
+}
+```
+
+Clients calculate client-server clock offset on connection using an NTP-style ping exchange, ensuring synchronization precision even over mobile cellular connections.
+
+---
+
 ## Production Deployment
 
-### Option A: Automated Script
+### Automated Script
+
+Execute the self-contained deployment script from the project root:
 
 ```bash
 chmod +x deploy.sh
 ./deploy.sh
 ```
 
-### Option B: Manual PM2 Process Setup
+### Manual Setup via PM2
 
-1. Build the web application:
+1. Build the production bundle for the web application:
    ```bash
    cd playeon-web
    npm run build
    cd ..
    ```
 
-2. Start processes via PM2:
+2. Compile TypeScript for the bot daemon:
+   ```bash
+   cd playeon-bot
+   npm run build
+   cd ..
+   ```
+
+3. Launch and persist services with PM2:
    ```bash
    pm2 start ecosystem.config.cjs
    pm2 save
-   ```
-
-3. Setup systemd autostart:
-   ```bash
    pm2 startup
    ```
 
-Sample Nginx reverse proxy templates are available in [`deploy/nginx/playeon.conf`](deploy/nginx/playeon.conf).
+4. Verify status:
+   ```bash
+   pm2 status
+   pm2 logs
+   ```
+
+### Reverse Proxy Configuration
+
+A sample Nginx configuration file is provided in `deploy/nginx/playeon.conf`. It configures SSL termination, WebSocket upgrade forwarding for `/ws`, and proxy caching for media assets.
 
 ---
 
-## Project Status & Disclaimer
+## Disclaimer & Documentation
 
-This project is actively maintained and continuously evolving. Documentation, setup guides, and repository code annotations have been organized and prepared with the assistance of Gemini.
+This codebase is continuously maintained. Architecture documentation, command references, and deployment scripts have been prepared and organized with the assistance of Gemini.
 
 ---
 
 ## Author & Attribution
 
-- **Original Author**: Sushi <contact@xysushi.in>
+- **Lead Architect**: Sushi <contact@xysushi.in>
 - **Organization**: [Playeon](https://github.com/playeon)
 
 ---
 
 ## License
 
-This software is released under the **Attribution and Personal Use License (Version 1.0)**. Free for personal, non-commercial evaluation and private use. Redistribution, commercial exploitation, uncredited mirroring, or unauthorized re-branding is strictly prohibited. See the full [LICENSE](LICENSE) file for legal details.
+This project is licensed under the **Attribution and Personal Use License (Version 1.0)**. Free for personal, non-commercial evaluation, learning, and private hosting. Redistribution, uncredited forks, commercial exploitation, or unauthorized rebranding is prohibited. Review the full [LICENSE](LICENSE) file for complete terms.
