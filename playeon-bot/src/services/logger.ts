@@ -1,4 +1,4 @@
-import { logUserStarted } from './services/userStarted.js'
+import { logUserStarted } from './logs/userStarted.js'
 import { logBotJoinedChat } from './logs/botJoinedChat.js'
 import { logBotLeftChat } from './logs/botLeftChat.js'
 import { logPrefixChanged } from './logs/prefixChanged.js'
