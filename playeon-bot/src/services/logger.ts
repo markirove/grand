@@ -1,5 +1,3 @@
-export type Logger = typeof logger
-
 export const logger = {
   userStarted: logUserStarted,
   botJoinedChat: logBotJoinedChat,
